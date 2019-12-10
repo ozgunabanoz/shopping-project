@@ -17,4 +17,6 @@ router.get(
   adminController.getEditProduct
 );
 
+router.post('/edit-product', adminController.postEditProduct);
+
 module.exports = router;
