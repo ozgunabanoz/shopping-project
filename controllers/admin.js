@@ -33,10 +33,11 @@ exports.getEditProduct = async (req, res, next) => {
   }
 
   const prodId = req.params.productId;
-  let product;
+  let products;
 
   try {
-    product = await Product.findByPk(prodId);
+    products = await req.user.getProducts({ where: { id: prodId } });
+    let product = products[0];
 
     if (!product) {
       res.redirect('/');
@@ -80,7 +81,7 @@ exports.getProducts = async (req, res, next) => {
   let products;
 
   try {
-    products = await Product.findAll();
+    products = await req.user.getProducts();
 
     res.render('admin/products', {
       prods: products,

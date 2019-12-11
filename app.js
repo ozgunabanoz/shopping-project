@@ -45,7 +45,7 @@ User.hasMany(Product);
   let user;
 
   try {
-    await sequelize.sync({ force: true });
+    await sequelize.sync();
 
     user = await User.findByPk(1);
 
