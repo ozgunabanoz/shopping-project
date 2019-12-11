@@ -20,12 +20,13 @@ exports.postAddProduct = async (req, res, next) => {
     });
 
     console.log('Product created.');
+    res.redirect('/');
   } catch (err) {
     console.log(err);
   }
 };
 
-exports.getEditProduct = (req, res, next) => {
+exports.getEditProduct = async (req, res, next) => {
   const editMode = req.query.edit;
 
   if (!editMode) {
@@ -33,10 +34,13 @@ exports.getEditProduct = (req, res, next) => {
   }
 
   const prodId = req.params.productId;
+  let product;
 
-  Product.findById(prodId, product => {
+  try {
+    product = await Product.findByPk(prodId);
+
     if (!product) {
-      return res.redirect('/');
+      res.redirect('/');
     }
 
     res.render('admin/edit-product', {
@@ -45,40 +49,64 @@ exports.getEditProduct = (req, res, next) => {
       editing: editMode,
       product: product
     });
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-exports.postEditProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  const updatedTitle = req.body.title;
-  const updatedPrice = req.body.price;
-  const updatedImage = req.body.imageUrl;
-  const updatedDescription = req.body.description;
-  const updatedProduct = new Product(
-    prodId,
-    updatedTitle,
-    updatedImage,
-    updatedDescription,
-    updatedPrice
-  );
+exports.postEditProduct = async (req, res, next) => {
+  const { title, imageUrl, price, description, productId } = req.body;
+  let product;
 
-  updatedProduct.save();
-  res.redirect('/admin/products');
+  try {
+    product = await Product.findByPk(productId);
+
+    if (!product) {
+      res.redirect('/');
+    }
+
+    product.title = title;
+    product.imageUrl = imageUrl;
+    product.price = price;
+    product.description = description;
+
+    await product.save();
+    res.redirect('/admin/products');
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-exports.getProducts = (req, res, next) => {
-  Product.fetchAll(products => {
+exports.getProducts = async (req, res, next) => {
+  let products;
+
+  try {
+    products = await Product.findAll();
+
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
       path: '/admin/products'
     });
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
-exports.postDeleteProduct = (req, res, next) => {
+exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
+  let product;
 
-  Product.deleteById(prodId);
-  res.redirect('/admin/products');
+  try {
+    product = await Product.findByPk(prodId);
+
+    if (!product) {
+      res.redirect('/');
+    }
+
+    await product.destroy();
+    res.redirect('/admin/products');
+  } catch (err) {
+    console.log(err);
+  }
 };
