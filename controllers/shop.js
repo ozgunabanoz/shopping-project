@@ -50,31 +50,22 @@ exports.getIndex = async (req, res, next) => {
   }
 };
 
-exports.getCart = (req, res, next) => {
-  Cart.getCart(cart => {
-    Product.fetchAll(products => {
-      const cartProducts = [];
+exports.getCart = async (req, res, next) => {
+  let cart;
+  let products;
 
-      for (product of products) {
-        const cartProdData = cart.products.find(
-          p => p.id === product.id
-        );
+  try {
+    cart = await req.user.getCart();
+    products = await cart.getProducts();
 
-        if (cartProdData) {
-          cartProducts.push({
-            productData: product,
-            qty: cartProdData.qty
-          });
-        }
-      }
-
-      res.render('shop/cart', {
-        path: '/cart',
-        pageTitle: 'Your Cart',
-        products: cartProducts
-      });
+    res.render('shop/cart', {
+      path: '/cart',
+      pageTitle: 'Your Cart',
+      products: products
     });
-  });
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 exports.postCart = (req, res, next) => {
