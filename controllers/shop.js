@@ -68,13 +68,34 @@ exports.getCart = async (req, res, next) => {
   }
 };
 
-exports.postCart = (req, res, next) => {
+exports.postCart = async (req, res, next) => {
   const prodId = req.body.productId;
+  let cart;
+  let newQty = 1;
 
-  Product.findById(prodId, product => {
-    Cart.addProduct(prodId, product.price);
-  });
-  res.redirect('/');
+  try {
+    cart = await req.user.getCart();
+    let products = await cart.getProducts({ where: { id: prodId } });
+    let product;
+
+    if (products.length > 0) {
+      product = products[0];
+    }
+
+    if (product) {
+      let oldQty = product.cartItem.quantity;
+      newQty = oldQty + 1;
+    } else {
+      product = await Product.findByPk(prodId);
+    }
+
+    await cart.addProduct(product, {
+      through: { quantity: newQty }
+    });
+    res.redirect('/cart');
+  } catch (err) {
+    console.log(err);
+  }
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
