@@ -22,16 +22,16 @@ exports.getProduct = async (req, res, next) => {
   let product;
 
   try {
-    [product] = await Product.findById(prodId);
+    product = await Product.findByPk(prodId);
+
+    res.render('shop/product-detail', {
+      product: product,
+      pageTitle: product.title,
+      path: '/products'
+    });
   } catch (err) {
     console.log(err);
   }
-
-  res.render('shop/product-detail', {
-    product: product[0],
-    pageTitle: product.title,
-    path: '/products'
-  });
 };
 
 exports.getIndex = async (req, res, next) => {
