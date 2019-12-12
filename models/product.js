@@ -2,23 +2,31 @@ const mongodb = require('mongodb');
 const { getDb } = require('../util/database');
 
 class Product {
-  constructor(title, price, description, imageUrl) {
+  constructor(title, price, description, imageUrl, id) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
+    this._id = id;
   }
 
   async save() {
     const db = getDb();
+    let res;
 
     try {
-      let res = await db.collection('products').insertOne(this);
-
-      return res;
+      if (this._id) {
+        res = await db
+          .collection('products')
+          .updateOne({ _id: this._id }, { $set: this });
+      } else {
+        res = await db.collection('products').insertOne(this);
+      }
     } catch (err) {
       console.log(err);
     }
+
+    return res;
   }
 
   static async fetchAll() {

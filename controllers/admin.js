@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const ObjectId = require('mongodb').ObjectID;
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -15,6 +16,70 @@ exports.postAddProduct = async (req, res, next) => {
   try {
     await product.save();
     res.redirect('/admin/add-product');
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+exports.getProducts = async (req, res, next) => {
+  let products;
+
+  try {
+    products = await Product.fetchAll();
+
+    res.render('admin/products', {
+      prods: products,
+      pageTitle: 'Admin Products',
+      path: '/admin/products'
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+exports.getEditProduct = async (req, res, next) => {
+  const editMode = req.query.edit;
+
+  if (!editMode) {
+    return res.redirect('/');
+  }
+
+  const prodId = req.params.productId;
+  let product;
+
+  try {
+    product = await Product.findById(prodId);
+
+    if (!product) {
+      res.redirect('/');
+    }
+
+    res.render('admin/edit-product', {
+      pageTitle: 'Edit Product',
+      path: '/admin/edit-product',
+      editing: editMode,
+      product: product
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+exports.postEditProduct = async (req, res, next) => {
+  const { title, imageUrl, price, description, productId } = req.body;
+  let product;
+
+  try {
+    product = new Product(
+      title,
+      price,
+      description,
+      imageUrl,
+      new ObjectId(productId)
+    );
+
+    await product.save();
+    res.redirect('/admin/products');
   } catch (err) {
     console.log(err);
   }
