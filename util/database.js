@@ -1,3 +1,5 @@
+// this is now obsolete. it's for pure mongodb without mongoose
+
 const mongodb = require('mongodb');
 
 const MongoClient = mongodb.MongoClient;

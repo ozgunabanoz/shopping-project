@@ -1,12 +1,10 @@
 require('dotenv').config();
 const path = require('path');
-
+const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
-const ObjectId = require('mongodb').ObjectID;
 
 const errorController = require('./controllers/error');
-const { mongoConnect } = require('./util/database');
 const User = require('./models/user');
 
 const app = express();
@@ -23,9 +21,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(async (req, res, next) => {
   let user;
   try {
-    user = await User.findById('5df24372d4761727148a4176'); // dummy id
-
-    req.user = new User(user.name, user.email, user.cart, user._id);
+    user = await User.findById('5df2598dfa75d62050d6e677'); // dummy id
+    req.user = user;
     next();
   } catch (err) {
     console.log(err);
@@ -37,6 +34,27 @@ app.use(shopRoutes);
 
 app.use(errorController.get404);
 
-mongoConnect(() => {
-  app.listen(process.env.PORT || 3000);
-});
+(async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+
+    let user = await User.findOne(); // this is a temporary solution, we're using dummy user for now
+
+    if (!user) {
+      const user = new User({
+        // dummy user
+        name: 'Ozgun',
+        email: 'o@o.com',
+        cart: {
+          items: []
+        }
+      });
+
+      await user.save();
+    }
+
+    app.listen(process.env.PORT || 3000);
+  } catch (err) {
+    console.log(err);
+  }
+})();
