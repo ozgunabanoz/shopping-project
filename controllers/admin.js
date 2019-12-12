@@ -15,7 +15,7 @@ exports.postAddProduct = async (req, res, next) => {
 
   try {
     await product.save();
-    res.redirect('/admin/add-product');
+    res.redirect('/admin/products');
   } catch (err) {
     console.log(err);
   }
@@ -45,10 +45,9 @@ exports.getEditProduct = async (req, res, next) => {
   }
 
   const prodId = req.params.productId;
-  let product;
 
   try {
-    product = await Product.findById(prodId);
+    let product = await Product.findById(prodId);
 
     if (!product) {
       res.redirect('/');
@@ -69,18 +68,30 @@ exports.postEditProduct = async (req, res, next) => {
   const { title, imageUrl, price, description, productId } = req.body;
   let product;
 
-  try {
-    product = new Product(
-      title,
-      price,
-      description,
-      imageUrl,
-      new ObjectId(productId)
-    );
+  product = new Product(
+    title,
+    price,
+    description,
+    imageUrl,
+    new ObjectId(productId)
+  );
 
+  try {
     await product.save();
     res.redirect('/admin/products');
   } catch (err) {
     console.log(err);
   }
+};
+
+exports.postDeleteProduct = async (req, res, next) => {
+  const prodId = req.body.productId;
+
+  try {
+    await Product.deleteById(prodId);
+  } catch (err) {
+    console.log(err);
+  }
+
+  res.redirect('/admin/products');
 };
