@@ -23,11 +23,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(async (req, res, next) => {
   let user;
   try {
-    user = await User.findById(
-      new ObjectId('5df22805dc3e411048636c7d')
-    ); // dummy id
+    user = await User.findById('5df22805dc3e411048636c7d'); // dummy id
 
-    req.user = user;
+    req.user = new User(user.name, user.email, user.cart, user._id);
     next();
   } catch (err) {
     console.log(err);
