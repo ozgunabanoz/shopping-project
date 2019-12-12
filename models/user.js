@@ -95,6 +95,49 @@ class User {
     }
   }
 
+  async addOrder() {
+    const db = getDb();
+    let products;
+    let order;
+
+    try {
+      products = await this.getCart();
+      order = {
+        items: products,
+        user: {
+          _id: new ObjectId(this._id),
+          name: this.name
+        }
+      };
+
+      await db.collection('orders').insertOne(order);
+
+      this.cart = { items: [] };
+
+      return await db.collection('users').updateOne(
+        {
+          _id: new ObjectId(this._id)
+        },
+        { $set: { cart: { items: [] } } }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async getOrders() {
+    const db = getDb();
+
+    try {
+      return db
+        .collection('orders')
+        .find({ 'user._id': new ObjectId(this._id) })
+        .toArray();
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   static async findById(userId) {
     const db = getDb();
 

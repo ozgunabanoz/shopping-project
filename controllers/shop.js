@@ -37,7 +37,7 @@ exports.getIndex = async (req, res, next) => {
   let products;
 
   try {
-    products = await Product.findAll();
+    products = await Product.fetchAll();
 
     res.render('shop/index', {
       prods: products,
@@ -92,23 +92,8 @@ exports.postCartDeleteProduct = async (req, res, next) => {
 };
 
 exports.postOrder = async (req, res, next) => {
-  let cart;
-  let products;
-  let order;
-
   try {
-    cart = await req.user.getCart();
-    products = await cart.getProducts();
-    order = await req.user.createOrder();
-
-    await order.addProducts(
-      products.map(p => {
-        p.orderItem = { quantity: p.cartItem.quantity };
-
-        return p;
-      })
-    );
-    await cart.setProducts(null);
+    await req.user.addOrder();
     res.redirect('/orders');
   } catch (err) {
     console.log(err);
@@ -119,7 +104,7 @@ exports.getOrders = async (req, res, next) => {
   let orders;
 
   try {
-    orders = await req.user.getOrders({ include: ['products'] });
+    orders = await req.user.getOrders();
 
     res.render('shop/orders', {
       path: '/orders',
