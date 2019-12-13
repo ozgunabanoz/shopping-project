@@ -59,22 +59,6 @@ app.use(errorController.get404);
 (async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-
-    let user = await User.findOne(); // this is a temporary solution, we're using dummy user for now
-
-    if (!user) {
-      const user = new User({
-        // dummy user
-        name: 'Ozgun',
-        email: 'o@o.com',
-        cart: {
-          items: []
-        }
-      });
-
-      await user.save();
-    }
-
     app.listen(process.env.PORT || 3000);
   } catch (err) {
     console.log(err);
