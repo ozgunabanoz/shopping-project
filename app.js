@@ -3,11 +3,17 @@ const path = require('path');
 const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const MongoDbStore = require('connect-mongodb-session')(session);
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const app = express();
+const store = new MongoDbStore({
+  uri: process.env.MONGO_URI,
+  collection: 'sessions'
+});
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -18,12 +24,26 @@ const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    store
+  })
+);
 
 app.use(async (req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+
   let user;
+
   try {
-    user = await User.findById('5df2598dfa75d62050d6e677'); // dummy id
+    user = await User.findById(req.session.user._id);
     req.user = user;
+
     next();
   } catch (err) {
     console.log(err);
