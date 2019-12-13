@@ -20,9 +20,21 @@ exports.getSignup = (req, res, next) => {
 
 exports.postLogin = async (req, res, next) => {
   let user;
+  let email = req.body.email;
+  let password = req.body.password;
 
   try {
-    user = await User.findById('5df2598dfa75d62050d6e677'); // dummy id
+    user = await User.findOne({ email });
+
+    if (!user) {
+      return res.redirect('/');
+    }
+
+    let match = await bcrypt.compare(password, user.password);
+
+    if (!match) {
+      return res.redirect('/login');
+    }
 
     req.session.user = user;
     req.session.isLoggedIn = true;
@@ -31,6 +43,7 @@ exports.postLogin = async (req, res, next) => {
     res.redirect('/');
   } catch (err) {
     console.log(err);
+    res.redirect('/login');
   }
 };
 
@@ -65,5 +78,6 @@ exports.postSignup = async (req, res, next) => {
     res.redirect('/login');
   } catch (err) {
     console.log(err);
+    res.redirect('/signup');
   }
 };
