@@ -8,6 +8,14 @@ exports.getLogin = (req, res, next) => {
   });
 };
 
+exports.getSignup = (req, res, next) => {
+  res.render('auth/signup', {
+    path: '/signup',
+    pageTitle: 'Signup',
+    isAuthenticated: false
+  });
+};
+
 exports.postLogin = async (req, res, next) => {
   let user;
 
@@ -29,3 +37,5 @@ exports.postLogout = (req, res, next) => {
     res.redirect('/');
   });
 };
+
+exports.postSignup = (req, res, next) => {};
