@@ -98,17 +98,8 @@ exports.postSignup = async (req, res, next) => {
 
   const email = req.body.email;
   const password = req.body.password;
-  const confirmPassword = req.body.confirmPassword;
-  let user;
 
   try {
-    user = await User.findOne({ email });
-
-    if (user) {
-      req.flash('error', 'Email already taken');
-      return res.redirect('/signup');
-    }
-
     let hashedPassword = await bcrypt.hash(password, 12);
 
     let newUser = new User({
