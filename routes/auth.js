@@ -15,13 +15,15 @@ router.post(
   [
     body('email')
       .isEmail()
-      .withMessage('Please enter a valid email.'),
+      .withMessage('Please enter a valid email.')
+      .normalizeEmail(),
     body(
       'password',
       'Please enter a password with only numbers and text and at least 8 characters'
     )
       .isLength({ min: 8 })
       .isAlphanumeric()
+      .trim()
   ],
   authController.postLogin
 );
@@ -32,6 +34,7 @@ router.post(
     check('email')
       .isEmail()
       .withMessage('Please enter a valid email.')
+      .normalizeEmail()
       .custom(async (value, { req }) => {
         let user;
 
@@ -50,13 +53,16 @@ router.post(
       'Please enter a password with only numbers and text and at least 8 characters'
     )
       .isLength({ min: 8 })
-      .isAlphanumeric(),
-    body('confirmPassword').custom((value, { req }) => {
-      if (value !== req.body.password) {
-        throw new Error('Passwords have to match');
-      }
-      return true;
-    })
+      .isAlphanumeric()
+      .trim(),
+    body('confirmPassword')
+      .trim()
+      .custom((value, { req }) => {
+        if (value !== req.body.password) {
+          throw new Error('Passwords have to match');
+        }
+        return true;
+      })
   ],
   authController.postSignup
 );
