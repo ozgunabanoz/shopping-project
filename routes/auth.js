@@ -15,8 +15,7 @@ router.post(
   [
     body('email')
       .isEmail()
-      .withMessage('Please enter a valid email.')
-      .normalizeEmail(),
+      .withMessage('Please enter a valid email.'),
     body(
       'password',
       'Please enter a password with only numbers and text and at least 8 characters'
@@ -34,7 +33,6 @@ router.post(
     check('email')
       .isEmail()
       .withMessage('Please enter a valid email.')
-      .normalizeEmail()
       .custom(async (value, { req }) => {
         let user;
 

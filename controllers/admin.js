@@ -1,15 +1,39 @@
+const { validationResult } = require('express-validator');
+
 const Product = require('../models/product');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
-    editing: false
+    editing: false,
+    hasError: false,
+    errorMessage: null,
+    validationErrors: []
   });
 };
 
 exports.postAddProduct = async (req, res, next) => {
+  const errors = validationResult(req);
   const { title, imageUrl, price, description } = req.body;
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/edit-product',
+      editing: false,
+      product: {
+        title,
+        imageUrl,
+        price,
+        description
+      },
+      hasError: true,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array()
+    });
+  }
+
   const product = new Product({
     title,
     imageUrl,
@@ -62,7 +86,10 @@ exports.getEditProduct = async (req, res, next) => {
       pageTitle: 'Edit Product',
       path: '/admin/edit-product',
       editing: editMode,
-      product: product
+      product: product,
+      hasError: false,
+      errorMessage: null,
+      validationErrors: []
     });
   } catch (err) {
     console.log(err);
@@ -70,7 +97,27 @@ exports.getEditProduct = async (req, res, next) => {
 };
 
 exports.postEditProduct = async (req, res, next) => {
+  const errors = validationResult(req);
   const { title, imageUrl, price, description, productId } = req.body;
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Edit Product',
+      path: '/admin/edit-product',
+      editing: true,
+      product: {
+        title,
+        imageUrl,
+        price,
+        description,
+        _id: productId
+      },
+      hasError: true,
+      errorMessage: errors.array()[0].msg,
+      validationErrors: errors.array()
+    });
+  }
+
   let product;
 
   try {
