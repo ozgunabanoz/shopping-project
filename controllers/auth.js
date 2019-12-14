@@ -28,7 +28,9 @@ exports.getLogin = (req, res, next) => {
     path: '/login',
     pageTitle: 'Log In',
     isAuthenticated: false,
-    errorMessage: message
+    errorMessage: message,
+    oldInput: { email: '', password: '' },
+    validationErrors: []
   });
 };
 
@@ -59,7 +61,9 @@ exports.postLogin = async (req, res, next) => {
     return res.status(422).render('auth/login', {
       path: '/login',
       pageTitle: 'Log In',
-      errorMessage: errors.array()[0].msg
+      errorMessage: errors.array()[0].msg,
+      oldInput: { email, password },
+      validationErrors: errors.array()
     });
   }
 
@@ -67,15 +71,25 @@ exports.postLogin = async (req, res, next) => {
     user = await User.findOne({ email });
 
     if (!user) {
-      req.flash('error', 'Invalid email or password');
-      return res.redirect('/login');
+      return res.status(422).render('auth/login', {
+        path: '/login',
+        pageTitle: 'Log In',
+        errorMessage: 'Invalid email or password',
+        oldInput: { email, password },
+        validationErrors: []
+      });
     }
 
     let match = await bcrypt.compare(password, user.password);
 
     if (!match) {
-      req.flash('error', 'Invalid email or password');
-      return res.redirect('/login');
+      return res.status(422).render('auth/login', {
+        path: '/login',
+        pageTitle: 'Log In',
+        errorMessage: 'Invalid email or password',
+        oldInput: { email, password },
+        validationErrors: []
+      });
     }
 
     req.session.user = user;
