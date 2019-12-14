@@ -44,14 +44,23 @@ exports.getSignup = (req, res, next) => {
     path: '/signup',
     pageTitle: 'Signup',
     isAuthenticated: false,
-    errorMessage: message
+    errorMessage: message,
+    oldInput: { email: '', password: '', confirmPassword: '' }
   });
 };
 
 exports.postLogin = async (req, res, next) => {
+  const errors = validationResult(req);
   let user;
-  let email = req.body.email;
-  let password = req.body.password;
+  let { email, password } = req.body;
+
+  if (!errors.isEmpty()) {
+    return res.status(422).render('auth/login', {
+      path: '/login',
+      pageTitle: 'Log In',
+      errorMessage: errors.array()[0].msg
+    });
+  }
 
   try {
     user = await User.findOne({ email });
@@ -87,17 +96,16 @@ exports.postLogout = (req, res, next) => {
 
 exports.postSignup = async (req, res, next) => {
   const errors = validationResult(req);
+  const { email, password, confirmPassword } = req.body;
 
   if (!errors.isEmpty()) {
     return res.status(422).render('auth/signup', {
       path: '/signup',
       pageTitle: 'Signup',
-      errorMessage: errors.array()[0].msg
+      errorMessage: errors.array()[0].msg,
+      oldInput: { email, password, confirmPassword }
     });
   }
-
-  const email = req.body.email;
-  const password = req.body.password;
 
   try {
     let hashedPassword = await bcrypt.hash(password, 12);
