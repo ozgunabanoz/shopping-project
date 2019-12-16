@@ -98,8 +98,11 @@ exports.postLogin = async (req, res, next) => {
     await req.session.save();
     res.redirect('/');
   } catch (err) {
-    console.log(err);
-    res.redirect('/login');
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -141,8 +144,11 @@ exports.postSignup = async (req, res, next) => {
     });
     res.redirect('/login');
   } catch (err) {
-    console.log(err);
-    res.redirect('/signup');
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -194,7 +200,11 @@ exports.postReset = (req, res, next) => {
       });
       res.redirect('/');
     } catch (err) {
-      console.log(err);
+      let error = new Error(err);
+
+      error.httpStatusCode = 500;
+
+      return next(error);
     }
   });
 };
@@ -225,7 +235,11 @@ exports.getNewPassword = async (req, res, next) => {
       passwordToken: token
     });
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -249,6 +263,10 @@ exports.postNewPassword = async (req, res, next) => {
     await user.save();
     res.redirect('/login');
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };

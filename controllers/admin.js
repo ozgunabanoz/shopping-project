@@ -20,7 +20,7 @@ exports.postAddProduct = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return res.status(422).render('admin/edit-product', {
       pageTitle: 'Add Product',
-      path: '/admin/edit-product',
+      path: '/admin/add-product',
       editing: false,
       product: {
         title,
@@ -46,7 +46,11 @@ exports.postAddProduct = async (req, res, next) => {
     await product.save();
     res.redirect('/admin/products');
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -62,7 +66,11 @@ exports.getProducts = async (req, res, next) => {
       path: '/admin/products'
     });
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -92,7 +100,11 @@ exports.getEditProduct = async (req, res, next) => {
       validationErrors: []
     });
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -135,7 +147,11 @@ exports.postEditProduct = async (req, res, next) => {
     await product.save();
     res.redirect('/admin/products');
   } catch (err) {
-    console.log(err);
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
 
@@ -144,9 +160,13 @@ exports.postDeleteProduct = async (req, res, next) => {
 
   try {
     await Product.deleteOne({ _id: prodId, userId: req.user._id });
-  } catch (err) {
-    console.log(err);
-  }
 
-  res.redirect('/admin/products');
+    res.redirect('/admin/products');
+  } catch (err) {
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
+  }
 };
