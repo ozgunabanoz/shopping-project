@@ -6,16 +6,29 @@ const PDFDocument = require('pdfkit');
 const Product = require('../models/product');
 const Order = require('../models/order');
 
+const ITEMS_PER_PAGE = 3;
+
 exports.getProducts = async (req, res, next) => {
   let products;
+  const page = +req.query.page || 1;
+  let totalItems;
 
   try {
-    products = await Product.find();
+    totalItems = await Product.countDocuments();
+    products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
 
     res.render('shop/product-list', {
       prods: products,
       pageTitle: 'All Products',
-      path: '/products'
+      path: '/products',
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+      hasPrevPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
     });
   } catch (err) {
     let error = new Error(err);
@@ -48,15 +61,26 @@ exports.getProduct = async (req, res, next) => {
 };
 
 exports.getIndex = async (req, res, next) => {
+  const page = +req.query.page || 1;
   let products;
+  let totalItems;
 
   try {
-    products = await Product.find();
+    totalItems = await Product.countDocuments();
+    products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
 
     res.render('shop/index', {
       prods: products,
       pageTitle: 'Shop',
-      path: '/'
+      path: '/',
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+      hasPrevPage: page > 1,
+      nextPage: page + 1,
+      prevPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
     });
   } catch (err) {
     let error = new Error(err);
@@ -223,7 +247,9 @@ exports.getInvoice = async (req, res, next) => {
       pdfDoc
         .fontSize(14)
         .text(
-          `Product: ${product.productData.title} - Quantity: ${product.quantity} Price: $${product.productData.price}`
+          `Product: ${product.productData.title} - Quantity: ${
+            product.quantity
+          } Price: $${product.productData.price}`
         );
     });
 
