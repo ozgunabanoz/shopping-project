@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const PDFDocument = require('pdfkit');
 
 const Product = require('../models/product');
@@ -259,5 +260,92 @@ exports.getInvoice = async (req, res, next) => {
     pdfDoc.end();
   } catch (err) {
     next(err);
+  }
+};
+
+exports.getCheckout = async (req, res, next) => {
+  let user;
+  let products = [];
+  let session;
+
+  try {
+    user = await req.user
+      .populate('cart.items.productId')
+      .execPopulate();
+    products = user.cart.items;
+
+    let totalSum = 0;
+
+    products.forEach(p => {
+      totalSum += p.quantity * p.productId.price;
+    });
+
+    session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: products.map(p => {
+        return {
+          name: p.productId.title,
+          description: p.productId.description,
+          amount: p.productId.price * 100,
+          currency: 'usd',
+          quantity: p.quantity
+        };
+      }),
+      success_url: `${req.protocol}://${req.get(
+        'host'
+      )}/checkout/success`,
+      cancel_url: `${req.protocol}://${req.get(
+        'host'
+      )}/checkout/cancel`
+    });
+
+    res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      totalSum,
+      sessionId: session.id
+    });
+  } catch (err) {
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
+  }
+};
+
+exports.getCheckoutSuccess = async (req, res, next) => {
+  let user;
+  let products;
+
+  try {
+    user = await req.user
+      .populate('cart.items.productId')
+      .execPopulate();
+    products = user.cart.items.map(i => {
+      return {
+        quantity: i.quantity,
+        productData: { ...i.productId._doc }
+      };
+    });
+
+    const order = new Order({
+      user: {
+        email: req.user.email,
+        userId: req.user
+      },
+      products
+    });
+
+    await order.save();
+    await req.user.clearCart();
+    res.redirect('/orders');
+  } catch (err) {
+    let error = new Error(err);
+
+    error.httpStatusCode = 500;
+
+    return next(error);
   }
 };
